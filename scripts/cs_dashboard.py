@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 ================================================================================
-                        CSM DASHBOARD PRO v3.2
+                        CSM DASHBOARD PRO v3.3
                   Customer Success Manager Dashboard
                       [AI-Powered Analytics]
 ================================================================================
-Профессиональная панель управления с цветным интерфейсом для Windows cmd.
-Использует ANSI коды для цветов и Unicode для графики.
+Стабильная версия с исправленными ошибками форматирования.
+Полностью рабочий цветной интерфейс для Windows cmd.
 """
 
 import json
@@ -38,22 +38,20 @@ class Colors:
     BOLD_GREEN = "\033[1;92m"
     BOLD_RED = "\033[1;91m"
     BOLD_CYAN = "\033[1;96m"
+    BOLD_YELLOW = "\033[1;93m"
+    BOLD_MAGENTA = "\033[1;95m"
     
     # Фон
     BG_BLUE = "\033[44m"
     BG_GREEN = "\033[42m"
     BG_YELLOW = "\033[43m"
-    
-    @staticmethod
-    def color(text, color_code):
-        """Окрашивает текст и сбрасывает цвет в конце."""
-        return f"{color_code}{text}{Colors.RESET}"
 
 class Icons:
     """Улучшенные текстовые иконки с Unicode символами."""
     # Главная картинка/логотип
-    LOGO = f"""
-{Colors.BOLD_BLUE}
+    @staticmethod
+    def get_logo():
+        return f"""{Colors.BOLD_BLUE}
     ╔══════════════════════════════════════════╗
     ║   ██████╗███████╗███╗   ███╗            ║
     ║  ██╔════╝██╔════╝████╗ ████║            ║
@@ -63,7 +61,7 @@ class Icons:
     ║   ╚═════╝╚══════╝╚═╝     ╚═╝            ║
     ║                                          ║
     ║  CUSTOMER SUCCESS MANAGER DASHBOARD PRO  ║
-    ║                 v3.2                     ║
+    ║                 v3.3                     ║
     ╚══════════════════════════════════════════╝{Colors.RESET}
 """
     
@@ -93,10 +91,20 @@ class Icons:
     FOLDER = f"{Colors.BLUE}📁{Colors.RESET}"
     GRAPH = f"{Colors.CYAN}📈{Colors.RESET}"
     BELL = f"{Colors.YELLOW}🔔{Colors.RESET}"
+    UPLOAD = f"{Colors.GREEN}⬆{Colors.RESET}"
     
     # Разделители
-    H_LINE = f"{Colors.BLUE}{'═' * 60}{Colors.RESET}"
-    H_THIN = f"{Colors.CYAN}{'─' * 50}{Colors.RESET}"
+    @staticmethod
+    def h_line():
+        return f"{Colors.BLUE}{'═' * 60}{Colors.RESET}"
+    
+    @staticmethod
+    def h_thin():
+        return f"{Colors.CYAN}{'─' * 50}{Colors.RESET}"
+    
+    @staticmethod
+    def h_double():
+        return f"{Colors.BOLD_BLUE}{'═' * 60}{Colors.RESET}"
 
 class CSMDashboardPro:
     """Улучшенная панель управления CSM с цветным интерфейсом."""
@@ -106,6 +114,7 @@ class CSMDashboardPro:
         self.metrics = self._calculate_metrics()
         self.ai_recommendations = []
         self.report_history = []
+        self.session_start = datetime.now()
         
     def _load_sample_data(self):
         """Загружает расширенные тестовые данные клиентов."""
@@ -226,21 +235,44 @@ class CSMDashboardPro:
     
     def display_header(self):
         """Отображает заголовок с логотипом."""
-        print(Icons.LOGO)
-        print(Icons.H_LINE)
-        print(f"{Colors.BOLD_BLUE}Дата:{Colors.RESET} {datetime.now().strftime('%d %B %Y, %A')}")
+        print(Icons.get_logo())
+        print(Icons.h_line())
+        
+        # Форматирование даты БЕЗ ошибок
+        current_date = datetime.now()
+        day = current_date.day
+        month_name = self._get_month_name_ru(current_date.month)
+        weekday_name = self._get_weekday_name_ru(current_date.weekday())
+        year = current_date.year
+        
+        date_str = f"{day} {month_name} {year}, {weekday_name}"
+        
+        print(f"{Colors.BOLD_BLUE}Дата:{Colors.RESET} {date_str}")
         print(f"{Colors.BOLD_BLUE}Менеджер:{Colors.RESET} Иван Иванов {Colors.BLUE}|{Colors.RESET} "
               f"{Colors.BOLD_BLUE}Email:{Colors.RESET} ivan@company.com")
         print(f"{Colors.BOLD_BLUE}Портфель:{Colors.RESET} {self.metrics['total_clients']} активных клиентов "
               f"{Colors.BLUE}|{Colors.RESET} "
               f"{Colors.BOLD_BLUE}MRR:{Colors.RESET} {self.metrics['total_mrr']:,} руб.")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         print()
+    
+    def _get_month_name_ru(self, month):
+        """Возвращает название месяца на русском."""
+        months = [
+            "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+            "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+        ]
+        return months[month - 1] if 1 <= month <= 12 else f"Месяц {month}"
+    
+    def _get_weekday_name_ru(self, weekday):
+        """Возвращает название дня недели на русском."""
+        weekdays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+        return weekdays[weekday]
     
     def display_metrics(self):
         """Отображает ключевые метрики."""
         print(f"{Icons.CHART} {Colors.BOLD_CYAN}КЛЮЧЕВЫЕ МЕТРИКИ ПОРТФЕЛЯ{Colors.RESET}")
-        print(Icons.H_THIN)
+        print(Icons.h_thin())
         
         metrics_display = [
             (Icons.MONEY, "MRR", f"{self.metrics['total_mrr']:,} руб."),
@@ -259,14 +291,14 @@ class CSMDashboardPro:
     def display_clients_table(self):
         """Отображает таблицу клиентов."""
         print(f"{Icons.USERS} {Colors.BOLD_CYAN}ОБЗОР КЛИЕНТСКОГО ПОРТФЕЛЯ{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         # Заголовок таблицы
         headers = ["ID", "Клиент", "Тип", "Health", "MRR", "Риск", "Статус"]
         print(f"{Colors.BOLD_BLUE}{headers[0]:<3} {headers[1]:<22} {headers[2]:<10} "
               f"{headers[3]:<7} {headers[4]:<12} {headers[5]:<7} {headers[6]:<10}{Colors.RESET}")
         
-        print(Icons.H_THIN)
+        print(Icons.h_thin())
         
         # Данные клиентов
         for client in self.clients_data:
@@ -300,13 +332,13 @@ class CSMDashboardPro:
                   f"{Colors.RED if client['churn_risk'] > 0.3 else Colors.YELLOW}{risk_percent:<7}{Colors.RESET} "
                   f"{status_color}{status_text:<10}{Colors.RESET}")
         
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         print()
     
     def display_ai_recommendations(self):
         """Отображает AI-рекомендации."""
         print(f"{Icons.AI} {Colors.BOLD_CYAN}AI РЕКОМЕНДАЦИИ{Colors.RESET}")
-        print(Icons.H_THIN)
+        print(Icons.h_thin())
         
         recommendations = []
         
@@ -323,21 +355,38 @@ class CSMDashboardPro:
                 f"   {Colors.BOLD}Действие:{Colors.RESET} {Colors.GREEN}Провести emergency call сегодня{Colors.RESET}"
             )
         
-        # Проверка неактивных клиентов
-        two_weeks_ago = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
-        inactive = [c for c in self.clients_data 
-                   if c["last_activity"] < two_weeks_ago and c["status"] == "active"]
+        # Проверка неактивных клиентов - ФИКСИРОВАННЫЙ КОД
+        two_weeks_ago = datetime.now() - timedelta(days=14)
+        two_weeks_ago_str = two_weeks_ago.strftime("%Y-%m-%d")  # Безопасное форматирование
+        
+        inactive = []
+        for client in self.clients_data:
+            if client["status"] == "active":
+                try:
+                    # Пробуем сравнить даты
+                    last_activity = datetime.strptime(client["last_activity"], "%Y-%m-%d")
+                    if last_activity < two_weeks_ago:
+                        inactive.append(client)
+                except ValueError:
+                    # Если формат даты не совпадает, пропускаем
+                    continue
+        
         if inactive:
             recommendations.append(
                 f"{Icons.BELL} {Colors.YELLOW}{len(inactive)} клиентов не активны 2+ недели{Colors.RESET}\n"
                 f"   {Colors.BOLD}Действие:{Colors.RESET} {Colors.GREEN}Отправить check-in письма{Colors.RESET}"
             )
         
-        # Проверка upcoming meetings
+        # Проверка upcoming meetings - ФИКСИРОВАННЫЙ КОД
         upcoming = [c for c in self.clients_data if c.get("action_date")]
         if upcoming:
-            today = datetime.now().strftime("%Y-%12-%d")
-            today_meetings = [c for c in upcoming if c["action_date"] == today]
+            today = datetime.now().strftime("%Y-%m-%d")  # Безопасное форматирование
+            today_meetings = []
+            
+            for client in upcoming:
+                if client.get("action_date") == today:
+                    today_meetings.append(client)
+            
             if today_meetings:
                 recommendations.append(
                     f"{Icons.CALENDAR} {Colors.CYAN}Сегодня запланировано {len(today_meetings)} встреч{Colors.RESET}\n"
@@ -362,7 +411,7 @@ class CSMDashboardPro:
     def display_quick_actions(self):
         """Отображает быстрые действия."""
         print(f"{Icons.QUICK} {Colors.BOLD_CYAN}БЫСТРЫЕ ДЕЙСТВИЯ{Colors.RESET}")
-        print(Icons.H_THIN)
+        print(Icons.h_thin())
         
         actions = [
             (Icons.EMAIL, "Email Campaign", "Запустить email-рассылку"),
@@ -390,7 +439,7 @@ class CSMDashboardPro:
     def display_interactive_menu(self):
         """Отображает исправленное меню."""
         print(f"{Icons.MENU} {Colors.BOLD_CYAN}ИНТЕРАКТИВНОЕ МЕНЮ{Colors.RESET}")
-        print(Icons.H_THIN)
+        print(Icons.h_thin())
         
         menu_items = [
             ("1", f"{Icons.DETAIL} Детальный анализ клиента"),
@@ -413,7 +462,7 @@ class CSMDashboardPro:
             else:
                 print(f"  {Colors.BOLD}{num1}.{Colors.RESET} {text1}")
         
-        print(Icons.H_THIN)
+        print(Icons.h_thin())
         
         try:
             choice = input(f"\n{Colors.BOLD_BLUE}Выберите действие (1-8):{Colors.RESET} ").strip()
@@ -446,7 +495,7 @@ class CSMDashboardPro:
         """Детальный просмотр клиента."""
         self._clear_screen()
         print(f"{Icons.DETAIL} {Colors.BOLD_CYAN}ДЕТАЛЬНЫЙ АНАЛИЗ КЛИЕНТА{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         try:
             client_id = int(input(f"{Colors.BOLD_BLUE}Введите ID клиента (1-{len(self.clients_data)}):{Colors.RESET} "))
@@ -459,7 +508,7 @@ class CSMDashboardPro:
             
             print()
             print(f"{Icons.USERS} {Colors.BOLD}{client['name']}{Colors.RESET}")
-            print(Icons.H_THIN)
+            print(Icons.h_thin())
             
             # Основная информация
             info_sections = [
@@ -517,7 +566,7 @@ class CSMDashboardPro:
                 print(f"  {Colors.BOLD_BLUE}Дата:{Colors.RESET} {client.get('action_date', 'Не назначено')}")
             
             print()
-            print(Icons.H_THIN)
+            print(Icons.h_thin())
             input(f"{Colors.BOLD_BLUE}Нажмите Enter для возврата...{Colors.RESET}")
             
         except ValueError:
@@ -528,7 +577,7 @@ class CSMDashboardPro:
         """Генератор профессиональных писем."""
         self._clear_screen()
         print(f"{Icons.EMAIL} {Colors.BOLD_CYAN}ГЕНЕРАТОР ПИСЕМ{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         print(f"\n{Colors.BOLD_CYAN}Доступные шаблоны:{Colors.RESET}")
         templates = [
@@ -555,7 +604,7 @@ class CSMDashboardPro:
                 manager_name = input(f"{Colors.BOLD_BLUE}Ваше имя:{Colors.RESET} ") or "Иван Иванов"
                 
                 print(f"\n{Icons.CHECK} {Colors.GREEN}Письмо сгенерировано!{Colors.RESET}")
-                print(Icons.H_THIN)
+                print(Icons.h_thin())
                 
                 # Генерация письма
                 subject = ""
@@ -658,7 +707,7 @@ Customer Success Manager"""
         """Создание отчетов."""
         self._clear_screen()
         print(f"{Icons.REPORT} {Colors.BOLD_CYAN}СОЗДАНИЕ ОТЧЕТОВ{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         print(f"\n{Colors.BOLD_CYAN}Типы отчетов:{Colors.RESET}")
         report_types = [
@@ -737,14 +786,14 @@ Customer Success Manager"""
             time.sleep(1)
     
     def schedule_meetings(self):
-        """Планирование встреч."""
+        """Планирование встреч - ФИКСИРОВАННАЯ ВЕРСИЯ."""
         self._clear_screen()
         print(f"{Icons.CALENDAR} {Colors.BOLD_CYAN}ПЛАНИРОВАНИЕ ВСТРЕЧ{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         # Предстоящие встречи
         upcoming = [c for c in self.clients_data if c.get("action_date")]
-        today = datetime.now().strftime("%Y-12-%d")
+        today = datetime.now().strftime("%Y-%m-%d")  # Безопасный формат
         
         print(f"\n{Colors.BOLD_CYAN}ПРЕДСТОЯЩИЕ ВСТРЕЧИ:{Colors.RESET}")
         
@@ -777,15 +826,26 @@ Customer Success Manager"""
             choice = input(f"\n{Colors.BOLD_BLUE}Выберите действие (1-2):{Colors.RESET} ").strip()
             
             if choice == "1":
-                client_id = input(f"{Colors.BOLD_BLUE}ID клиента:{Colors.RESET} ")
-                date = input(f"{Colors.BOLD_BLUE}Дата (YYYY-MM-DD):{Colors.RESET} ")
-                purpose = input(f"{Colors.BOLD_BLUE}Цель встречи:{Colors.RESET} ")
-                
-                print(f"\n{Icons.CHECK} {Colors.GREEN}Встреча запланирована!{Colors.RESET}")
-                print(f"Клиент: {client_id}")
-                print(f"Дата: {date}")
-                print(f"Цель: {purpose}")
-                
+                try:
+                    client_id = int(input(f"{Colors.BOLD_BLUE}ID клиента:{Colors.RESET} "))
+                    client = next((c for c in self.clients_data if c["id"] == client_id), None)
+                    
+                    if client:
+                        date = input(f"{Colors.BOLD_BLUE}Дата (ГГГГ-ММ-ДД):{Colors.RESET} ")
+                        purpose = input(f"{Colors.BOLD_BLUE}Цель встречи:{Colors.RESET} ")
+                        
+                        # Обновление данных клиента
+                        client["next_action"] = purpose
+                        client["action_date"] = date
+                        
+                        print(f"\n{Icons.CHECK} {Colors.GREEN}Встреча запланирована!{Colors.RESET}")
+                        print(f"Клиент: {client['name']}")
+                        print(f"Дата: {date}")
+                        print(f"Цель: {purpose}")
+                    else:
+                        print(f"{Colors.RED}[ERROR]{Colors.RESET} Клиент с ID {client_id} не найден")
+                except ValueError:
+                    print(f"{Colors.RED}[ERROR]{Colors.RESET} Введите корректный ID клиента")
             elif choice != "2":
                 print(f"{Colors.RED}[ERROR]{Colors.RESET} Неверный выбор")
         
@@ -799,7 +859,7 @@ Customer Success Manager"""
         """Обновление данных."""
         self._clear_screen()
         print(f"{Icons.SYNC} {Colors.BOLD_CYAN}ОБНОВЛЕНИЕ ДАННЫХ{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         print(f"\n{Icons.SYNC} {Colors.CYAN}Обновление метрик...{Colors.RESET}")
         
@@ -841,7 +901,7 @@ Customer Success Manager"""
         """Экспорт в CSV."""
         self._clear_screen()
         print(f"{Icons.SAVE} {Colors.BOLD_CYAN}ЭКСПОРТ В CSV{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         try:
             filename = f"csm_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
@@ -903,7 +963,7 @@ Customer Success Manager"""
         """Настройки программы."""
         self._clear_screen()
         print(f"{Icons.SETTINGS} {Colors.BOLD_CYAN}НАСТРОЙКИ ПРОГРАММЫ{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         settings = [
             ("Тема", "Стандартная (синяя)"),
@@ -913,7 +973,7 @@ Customer Success Manager"""
             ("Язык", "Русский"),
             ("Формат даты", "DD.MM.YYYY"),
             ("Валюта", "RUB (руб.)"),
-            ("Версия", "3.2 Pro")
+            ("Версия", "3.3 Stable")
         ]
         
         print(f"\n{Colors.BOLD_CYAN}ТЕКУЩИЕ НАСТРОЙКИ:{Colors.RESET}")
@@ -942,7 +1002,7 @@ Customer Success Manager"""
             
             if choice in ["1", "2", "3", "4"]:
                 print(f"\n{Icons.SETTINGS} {Colors.CYAN}Эта функция в активной разработке...{Colors.RESET}")
-                print(f"{Colors.BOLD_BLUE}Ожидайте в следующем обновлении v3.3!{Colors.RESET}")
+                print(f"{Colors.BOLD_BLUE}Ожидайте в следующем обновлении v3.4!{Colors.RESET}")
                 
                 new_features = [
                     "• Темная/светлая тема",
@@ -970,7 +1030,7 @@ Customer Success Manager"""
         """Выход из программы."""
         self._clear_screen()
         print(f"{Icons.EXIT} {Colors.BOLD_CYAN}ВЫХОД ИЗ ПРОГРАММЫ{Colors.RESET}")
-        print(Icons.H_LINE)
+        print(Icons.h_line())
         
         print(f"\n{Icons.SAVE} {Colors.CYAN}Сохранение данных...{Colors.RESET}")
         
@@ -982,22 +1042,28 @@ Customer Success Manager"""
         
         print(f"\n{Icons.CHECK} {Colors.GREEN}Данные сохранены!{Colors.RESET}")
         
+        # Расчет длительности сессии
+        session_duration = datetime.now() - self.session_start
+        hours, remainder = divmod(session_duration.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        
         # Статистика сессии
         print(f"\n{Colors.BOLD_CYAN}СТАТИСТИКА ЗА СЕССИЮ:{Colors.RESET}")
         stats = [
+            (f"Длительность сессии", f"{hours:02d}:{minutes:02d}:{seconds:02d}"),
             (f"Клиентов в базе", len(self.clients_data)),
             (f"Активных клиентов", self.metrics['total_clients']),
             (f"Общий MRR", f"{self.metrics['total_mrr']:,} руб."),
             (f"Средний Health Score", self.metrics['avg_health_score']),
             (f"Клиентов в риске", self.metrics['at_risk_count']),
-            (f"Дата и время", datetime.now().strftime("%d.%m.%Y %H:%M:%S"))
+            (f"Дата и время выхода", datetime.now().strftime("%d.%m.%Y %H:%M:%S"))
         ]
         
         for label, value in stats:
             print(f"  {Colors.BOLD_BLUE}{label:<25}{Colors.RESET}: {value}")
         
         print(f"\n{Colors.BOLD_CYAN}{'═'*50}{Colors.RESET}")
-        print(f"{Colors.BOLD_GREEN}Спасибо за использование CSM Dashboard Pro v3.2!{Colors.RESET}")
+        print(f"{Colors.BOLD_GREEN}Спасибо за использование CSM Dashboard Pro v3.3!{Colors.RESET}")
         print(f"{Colors.BOLD_BLUE}До новых встреч! 👋{Colors.RESET}")
         print(f"{Colors.BOLD_CYAN}{'═'*50}{Colors.RESET}")
         
@@ -1007,30 +1073,43 @@ Customer Success Manager"""
     def run(self):
         """Основной цикл программы."""
         while True:
-            self._clear_screen()
-            self.display_header()
-            self.display_metrics()
-            self.display_clients_table()
-            self.display_ai_recommendations()
-            self.display_quick_actions()
-            self.display_interactive_menu()
+            try:
+                self._clear_screen()
+                self.display_header()
+                self.display_metrics()
+                self.display_clients_table()
+                self.display_ai_recommendations()
+                self.display_quick_actions()
+                self.display_interactive_menu()
+            except Exception as e:
+                print(f"\n{Colors.RED}[ERROR]{Colors.RESET} Неожиданная ошибка: {e}")
+                print(f"{Colors.YELLOW}[INFO]{Colors.RESET} Перезапуск интерфейса...")
+                time.sleep(2)
 
 
 # =================== ЗАПУСК ПРОГРАММЫ ===================
 if __name__ == "__main__":
     try:
-        # Проверка поддержки ANSI в Windows
+        # Включаем поддержку ANSI в Windows
         if os.name == 'nt':
-            os.system('')  # Включает поддержку ANSI в Windows 10+
+            os.system('')
         
         print(f"\n{Colors.BOLD_CYAN}{'═'*60}{Colors.RESET}")
-        print(f"{Colors.BOLD_BLUE}          ИНИЦИАЛИЗАЦИЯ CSM DASHBOARD PRO v3.2{Colors.RESET}")
+        print(f"{Colors.BOLD_BLUE}          ЗАПУСК CSM DASHBOARD PRO v3.3{Colors.RESET}")
         print(f"{Colors.BOLD_CYAN}{'═'*60}{Colors.RESET}")
+        
+        # Проверка системы
+        print(f"\n{Colors.CYAN}🔍 Проверка системы...{Colors.RESET}")
+        time.sleep(0.5)
+        
+        print(f"{Colors.GREEN}✓ Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}{Colors.RESET}")
+        print(f"{Colors.GREEN}✓ ОС: {os.name}{Colors.RESET}")
+        print(f"{Colors.GREEN}✓ Кодировка: {sys.getdefaultencoding()}{Colors.RESET}")
         
         # Анимация загрузки
         steps = [
             "Загрузка данных клиентов...",
-            "Инициализация модулей AI...",
+            "Инициализация AI-модулей...",
             "Настройка цветового интерфейса...",
             "Подготовка отчетов..."
         ]
@@ -1039,10 +1118,11 @@ if __name__ == "__main__":
             print(f"\n{Colors.CYAN}⏳ {step}{Colors.RESET}")
             time.sleep(0.3)
         
-        print(f"\n{Colors.GREEN}✅ CSM Dashboard Pro v3.2 успешно запущен!{Colors.RESET}")
+        print(f"\n{Colors.GREEN}✅ CSM Dashboard Pro v3.3 успешно запущен!{Colors.RESET}")
         print(f"{Colors.BOLD_CYAN}{'─'*60}{Colors.RESET}")
         print(f"{Colors.BOLD}💡 Подсказка:{Colors.RESET} Используйте цифры 1-8 для навигации")
         print(f"{Colors.BOLD}🎨 Интерфейс:{Colors.RESET} Цветной с Unicode символами")
+        print(f"{Colors.BOLD}🛡️  Стабильность:{Colors.RESET} Исправлены все ошибки форматирования")
         time.sleep(2)
         
         # Запуск основного приложения
@@ -1053,7 +1133,8 @@ if __name__ == "__main__":
         print(f"\n\n{Colors.YELLOW}[EXIT]{Colors.RESET} Программа прервана пользователем.")
     except Exception as e:
         print(f"\n{Colors.RED}[ERROR]{Colors.RESET} Критическая ошибка: {e}")
-        print(f"{Colors.RED}[ERROR]{Colors.RESET} Убедитесь, что ваш терминал поддерживает UTF-8")
+        import traceback
+        traceback.print_exc()
     finally:
         print(f"\n{Colors.CYAN}Завершение работы...{Colors.RESET}")
         time.sleep(1)
